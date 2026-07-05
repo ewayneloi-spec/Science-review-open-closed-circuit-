@@ -1,1 +1,696 @@
 # Science-review-open-closed-circuit-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Science Review — Open &amp; Closed Circuits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0d2138;
+    --navy-panel:#152c47;
+    --navy-panel-2:#1c3654;
+    --wire:#3a5978;
+    --copper:#d98a3d;
+    --copper-bright:#ffb703;
+    --teal:#4fb0a5;
+    --teal-dim:#2f6e66;
+    --ink:#eaf1f6;
+    --ink-dim:#a9bfd1;
+    --danger:#e0665a;
+    --good:#5fbf8f;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(255,183,3,0.06), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(79,176,165,0.08), transparent 45%),
+      var(--navy-deep);
+    color:var(--ink);
+    font-family:'Nunito', sans-serif;
+    min-height:100vh;
+    padding:0 0 60px 0;
+  }
+  .circuit-bg{
+    position:fixed; inset:0; z-index:0; opacity:0.05; pointer-events:none;
+    background-image:
+      linear-gradient(var(--wire) 1px, transparent 1px),
+      linear-gradient(90deg, var(--wire) 1px, transparent 1px);
+    background-size:38px 38px;
+  }
+  .wrap{ position:relative; z-index:1; max-width:820px; margin:0 auto; padding:28px 20px 0 20px; }
+
+  .hero{ text-align:center; margin-bottom:6px; }
+  .eyebrow{
+    font-family:'Space Mono', monospace; font-size:12px; letter-spacing:3px;
+    color:var(--copper-bright); text-transform:uppercase; margin-bottom:10px;
+  }
+  h1{
+    font-family:'Fredoka', sans-serif; font-weight:700; font-size:clamp(26px, 5vw, 40px);
+    margin:0 0 6px 0; color:var(--ink);
+  }
+  .sub{ color:var(--ink-dim); font-size:15px; margin-bottom:22px; }
+
+  /* ---------- LIVE SWITCH DEMO (signature element) ---------- */
+  .demo-rig{
+    background:var(--navy-panel);
+    border:1px solid var(--wire);
+    border-radius:var(--radius);
+    padding:20px 20px 18px 20px;
+    margin-bottom:26px;
+  }
+  .demo-rig svg{ display:block; width:100%; height:auto; cursor:pointer; }
+  .demo-status{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:12px; flex-wrap:wrap; gap:10px;
+  }
+  .status-pill{
+    font-family:'Space Mono', monospace; font-size:12px; font-weight:700;
+    letter-spacing:1.5px; padding:6px 14px; border-radius:20px;
+    transition:all 0.3s ease;
+  }
+  .status-pill.open{ background:rgba(224,102,90,0.18); color:var(--danger); border:1px solid var(--danger); }
+  .status-pill.closed{ background:rgba(95,191,143,0.18); color:var(--good); border:1px solid var(--good); }
+  .demo-hint{ font-size:12px; color:var(--ink-dim); }
+  .demo-def{
+    font-size:13px; color:var(--ink); margin-top:10px; line-height:1.5;
+    background:var(--navy-panel-2); border-radius:10px; padding:10px 13px;
+  }
+
+  .wire-off{ fill:none; stroke:var(--wire); stroke-width:5; stroke-linecap:round; }
+  .wire-on{ fill:none; stroke:var(--copper-bright); stroke-width:5; stroke-linecap:round;
+    filter:drop-shadow(0 0 5px rgba(255,183,3,0.8)); display:none; }
+  .switch-arm{ stroke:#cfe0ea; stroke-width:5; stroke-linecap:round; transform-origin:308px 45px; transition:transform 0.35s ease; }
+  .switch-post{ fill:#cfe0ea; }
+  .bulb-glass{ fill:#2a3f57; stroke:var(--wire); stroke-width:2; transition:fill 0.4s ease, filter 0.4s ease; }
+  .bulb-glass.lit{ fill:#ffe9a8; filter:drop-shadow(0 0 14px rgba(255,183,3,0.95)); }
+  .bulb-filament{ stroke:#4a5f78; stroke-width:2; fill:none; transition:stroke 0.4s ease; }
+  .bulb-filament.lit{ stroke:#a3620a; }
+
+  /* ---------- progress bar ---------- */
+  .progress-bar-outer{
+    background:var(--navy-panel); border:1px solid var(--wire); border-radius:20px;
+    padding:10px 16px; margin-bottom:26px; display:flex; align-items:center; gap:12px;
+  }
+  .progress-bar-track{
+    flex:1; height:8px; background:var(--navy-panel-2); border-radius:6px; overflow:hidden;
+  }
+  .progress-bar-fill{
+    height:100%; width:0%; background:linear-gradient(90deg, var(--copper), var(--copper-bright));
+    transition:width 0.5s ease; border-radius:6px;
+  }
+  .progress-text{ font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-dim); white-space:nowrap; }
+  .progress-text b{ color:var(--copper-bright); }
+
+  section{
+    background:var(--navy-panel); border:1px solid var(--wire); border-radius:var(--radius);
+    padding:24px 24px 26px 24px; margin-bottom:20px;
+  }
+  .sec-head{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .sec-badge{
+    font-family:'Space Mono', monospace; font-size:11px; color:var(--navy-deep);
+    background:var(--copper-bright); padding:3px 9px; border-radius:20px; font-weight:700;
+  }
+  .sec-title{ font-family:'Fredoka', sans-serif; font-weight:600; font-size:20px; color:var(--ink); }
+  .sec-desc{ color:var(--ink-dim); font-size:13.5px; margin:6px 0 18px 0; line-height:1.5; }
+
+  /* ---- Flashcards ---- */
+  .flash-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  .flashcard{ perspective:1000px; height:130px; cursor:pointer; }
+  .flash-inner{
+    position:relative; width:100%; height:100%;
+    transition:transform 0.55s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d;
+  }
+  .flashcard.flipped .flash-inner{ transform:rotateY(180deg); }
+  .flash-face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:12px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:10px; text-align:center;
+  }
+  .flash-front{ background:var(--navy-panel-2); border:1.5px solid var(--wire); }
+  .flash-front .term{ font-family:'Fredoka', sans-serif; font-weight:600; font-size:15px; color:var(--copper-bright); }
+  .flash-front .tap-hint{ font-size:10px; color:var(--ink-dim); margin-top:8px; font-family:'Space Mono', monospace; }
+  .flash-back{
+    background:linear-gradient(160deg, var(--teal-dim), #234e49); border:1.5px solid var(--teal);
+    transform:rotateY(180deg); font-size:11.5px; line-height:1.4; color:var(--ink);
+  }
+
+  /* ---- Matching game ---- */
+  .match-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .match-col-title{
+    font-family:'Space Mono', monospace; font-size:10.5px; letter-spacing:1.5px;
+    color:var(--ink-dim); margin-bottom:10px; text-transform:uppercase;
+  }
+  .match-chip{
+    background:var(--navy-panel-2); border:1.5px solid var(--wire); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; cursor:pointer; font-size:12.5px; font-weight:700;
+    transition:all 0.15s ease;
+  }
+  .match-chip:hover{ border-color:var(--copper-bright); }
+  .match-chip.selected{ border-color:var(--copper-bright); background:#243f5c; }
+  .match-chip.matched{ opacity:0.35; pointer-events:none; border-color:var(--good); }
+  .job-card{
+    background:var(--navy-panel-2); border:1.5px solid var(--wire); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; cursor:pointer; font-size:11.5px; line-height:1.4;
+    transition:all 0.15s ease;
+  }
+  .job-card:hover{ border-color:var(--teal); }
+  .job-card.matched{ opacity:0.35; pointer-events:none; border-color:var(--good); }
+  .job-card.shake{ animation:shake 0.35s ease; border-color:var(--danger); }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-5px); }
+    75%{ transform:translateX(5px); }
+  }
+
+  /* ---- True/False ---- */
+  .tf-item{ border:1px solid var(--wire); border-radius:12px; padding:14px 16px; margin-bottom:12px; background:var(--navy-panel-2); }
+  .tf-item:last-child{ margin-bottom:0; }
+  .tf-statement{ font-size:13.5px; margin-bottom:10px; line-height:1.45; }
+  .tf-buttons{ display:flex; gap:8px; }
+  .tf-btn{
+    flex:1; font-family:'Space Mono', monospace; font-weight:700; font-size:12px; letter-spacing:1px;
+    padding:8px 0; border-radius:8px; border:1.5px solid var(--wire); background:transparent;
+    color:var(--ink); cursor:pointer; transition:all 0.15s ease;
+  }
+  .tf-btn:hover{ border-color:var(--copper-bright); }
+  .tf-feedback{ font-size:12px; margin-top:10px; padding:9px 11px; border-radius:8px; line-height:1.45; display:none; }
+  .tf-feedback.show{ display:block; }
+  .tf-feedback.correct{ background:rgba(95,191,143,0.15); color:var(--good); border:1px solid var(--good); }
+  .tf-feedback.incorrect{ background:rgba(224,102,90,0.15); color:var(--danger); border:1px solid var(--danger); }
+  .tf-item.locked .tf-btn{ opacity:0.4; pointer-events:none; }
+
+  /* ---- Sequencing ---- */
+  .seq-bank{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .seq-chip{
+    background:var(--navy-panel-2); border:1.5px solid var(--wire); border-radius:10px;
+    padding:8px 12px; font-size:12px; cursor:pointer; transition:all 0.15s ease;
+  }
+  .seq-chip:hover{ border-color:var(--copper-bright); }
+  .seq-chip.used{ opacity:0.3; pointer-events:none; }
+  .seq-order{
+    border:2px dashed var(--wire); border-radius:12px; padding:12px; min-height:60px;
+    margin-bottom:12px; display:flex; flex-direction:column; gap:6px;
+  }
+  .seq-order-item{
+    background:var(--navy-panel-2); border-radius:8px; padding:8px 12px; font-size:12px;
+    display:flex; gap:8px; align-items:flex-start;
+  }
+  .seq-order-item .num{
+    font-family:'Space Mono', monospace; font-weight:700; color:var(--copper-bright); flex-shrink:0;
+  }
+  .seq-order-item.correct-pos{ border-left:3px solid var(--good); }
+  .seq-order-item.wrong-pos{ border-left:3px solid var(--danger); }
+  .seq-actions{ display:flex; gap:10px; }
+  .seq-btn{
+    font-family:'Space Mono', monospace; font-size:11.5px; font-weight:700; padding:8px 16px;
+    border-radius:20px; cursor:pointer; border:1.5px solid var(--wire); background:transparent; color:var(--ink);
+  }
+  .seq-btn.primary{ background:var(--copper); color:#1a1200; border:none; }
+  .seq-btn:hover{ border-color:var(--copper-bright); }
+  .seq-msg{ font-size:11.5px; margin-top:8px; }
+  .seq-msg.correct{ color:var(--good); }
+  .seq-msg.incorrect{ color:var(--danger); }
+
+  /* ---- Fill in blank ---- */
+  .fib-item{ margin-bottom:16px; }
+  .fib-item:last-child{ margin-bottom:0; }
+  .fib-sentence{ font-size:13.5px; margin-bottom:8px; line-height:1.6; }
+  .fib-blanks{ display:flex; gap:10px; flex-wrap:wrap; }
+  .fib-field{ display:flex; flex-direction:column; gap:4px; flex:1; min-width:150px; }
+  .fib-input{
+    background:var(--navy-panel-2); border:1.5px solid var(--wire); border-radius:8px;
+    padding:9px 12px; color:var(--ink); font-size:13px; font-family:'Nunito', sans-serif;
+  }
+  .fib-input:focus{ outline:none; border-color:var(--copper-bright); }
+  .fib-check{
+    background:var(--copper); border:none; color:#1a1200; font-weight:800; font-size:12px;
+    padding:0 16px; border-radius:8px; cursor:pointer; font-family:'Space Mono', monospace;
+    margin-top:10px;
+  }
+  .fib-msg{ font-size:11.5px; margin-top:6px; min-height:16px; }
+  .fib-msg.correct{ color:var(--good); }
+  .fib-msg.incorrect{ color:var(--danger); }
+
+  .complete-banner{
+    display:none; text-align:center; padding:26px 20px;
+    background:linear-gradient(160deg, #23405c, #1a3350);
+    border:1.5px solid var(--copper-bright); border-radius:var(--radius);
+  }
+  .complete-banner.show{ display:block; }
+  .complete-banner .big{ font-family:'Fredoka', sans-serif; font-size:24px; font-weight:700; color:var(--copper-bright); margin-bottom:6px; }
+  .complete-banner p{ color:var(--ink-dim); font-size:13px; margin:0 0 16px 0; }
+  .reset-btn{
+    background:transparent; border:1.5px solid var(--wire); color:var(--ink); font-family:'Space Mono', monospace;
+    font-size:11.5px; padding:9px 18px; border-radius:20px; cursor:pointer;
+  }
+  .reset-btn:hover{ border-color:var(--copper-bright); color:var(--copper-bright); }
+
+  @media (max-width:560px){
+    .flash-row{ grid-template-columns:1fr 1fr; }
+    .match-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="circuit-bg"></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Science Review &middot; Revisit Your Experiment</div>
+    <h1>Open &amp; Closed Circuits</h1>
+    <div class="sub">You built this with 2 batteries, 3 crocodile clips, a switch, and a bulb. Tap the switch below to try it again.</div>
+  </div>
+
+  <!-- ============ LIVE SWITCH DEMO ============ -->
+  <div class="demo-rig">
+    <svg id="demo-svg" viewBox="0 0 760 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- 2 batteries -->
+      <rect x="16" y="38" width="22" height="24" rx="2" fill="#2a3f57" stroke="#3a5978" stroke-width="2"/>
+      <rect x="26" y="32" width="5" height="8" fill="#3a5978"/>
+      <rect x="42" y="38" width="22" height="24" rx="2" fill="#2a3f57" stroke="#3a5978" stroke-width="2"/>
+      <rect x="52" y="32" width="5" height="8" fill="#3a5978"/>
+
+      <!-- wire: battery to switch (off state, always visible as base) -->
+      <path class="wire-off" d="M 64 50 L 220 50 L 220 78 L 288 78"/>
+      <path class="wire-on" id="wire-on-1" d="M 64 50 L 220 50 L 220 78 L 288 78"/>
+
+      <!-- switch posts + arm -->
+      <circle class="switch-post" cx="288" cy="78" r="5"/>
+      <circle class="switch-post" cx="332" cy="78" r="5"/>
+      <line id="switch-arm" class="switch-arm" x1="288" y1="78" x2="330" y2="55"/>
+
+      <!-- wire: switch to bulb -->
+      <path class="wire-off" d="M 332 78 L 460 78 L 460 50 L 700 50"/>
+      <path class="wire-on" id="wire-on-2" d="M 332 78 L 460 78 L 460 50 L 700 50"/>
+
+      <!-- bulb -->
+      <circle id="bulb-glass" class="bulb-glass" cx="726" cy="50" r="22"/>
+      <path id="bulb-filament" class="bulb-filament" d="M 716 43 L 736 57 M 736 43 L 716 57"/>
+
+      <!-- clickable switch hit area -->
+      <rect id="switch-hitarea" x="270" y="30" width="80" height="65" fill="transparent"/>
+    </svg>
+
+    <div class="demo-status">
+      <span class="status-pill open" id="status-pill">OPEN CIRCUIT</span>
+      <span class="demo-hint">👆 Tap the switch to open or close the circuit</span>
+    </div>
+    <div class="demo-def" id="status-def">
+      The circuit is <b>open</b> — there is a break at the switch, so current cannot flow all the way around. The bulb stays dark.
+    </div>
+  </div>
+
+  <div class="progress-bar-outer">
+    <span class="progress-text">⚡ REVIEW PROGRESS</span>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <span class="progress-text"><b id="progress-count">0</b>/<span id="progress-total">17</span></span>
+  </div>
+
+  <!-- ============ VOCAB FLASHCARDS ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-badge">RECAP</span>
+      <span class="sec-title">Flip the vocab cards</span>
+    </div>
+    <div class="sec-desc">Tap each card to reveal the definition.</div>
+    <div class="flash-row">
+      <div class="flashcard" data-flash="1">
+        <div class="flash-inner">
+          <div class="flash-face flash-front"><div class="term">Circuit</div><div class="tap-hint">TAP</div></div>
+          <div class="flash-face flash-back">A complete path that allows electric current to flow from the battery, through the components, and back again.</div>
+        </div>
+      </div>
+      <div class="flashcard" data-flash="2">
+        <div class="flash-inner">
+          <div class="flash-face flash-front"><div class="term">Open Circuit</div><div class="tap-hint">TAP</div></div>
+          <div class="flash-face flash-back">A circuit with a break in the pathway. Current cannot flow, so the bulb does not light.</div>
+        </div>
+      </div>
+      <div class="flashcard" data-flash="3">
+        <div class="flash-inner">
+          <div class="flash-face flash-front"><div class="term">Closed Circuit</div><div class="tap-hint">TAP</div></div>
+          <div class="flash-face flash-back">A complete circuit with no breaks. Current can flow all the way around, so the bulb lights up.</div>
+        </div>
+      </div>
+      <div class="flashcard" data-flash="4">
+        <div class="flash-inner">
+          <div class="flash-face flash-front"><div class="term">Switch</div><div class="tap-hint">TAP</div></div>
+          <div class="flash-face flash-back">A component that opens or closes a circuit, so we can control the current without disconnecting any wires.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MATCHING GAME ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-badge">MATCH</span>
+      <span class="sec-title">Match the part to its job</span>
+    </div>
+    <div class="sec-desc">Tap a component on the left, then tap the job you think it does on the right.</div>
+    <div class="match-grid">
+      <div>
+        <div class="match-col-title">Component</div>
+        <div id="match-chips"></div>
+      </div>
+      <div>
+        <div class="match-col-title">Job in the circuit</div>
+        <div id="match-jobs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRUE / FALSE ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-badge">QUICK CHECK</span>
+      <span class="sec-title">True or false?</span>
+    </div>
+    <div class="sec-desc">Think back to what happened with your own circuit.</div>
+    <div id="tf-container"></div>
+  </section>
+
+  <!-- ============ SEQUENCING ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-badge">PROCEDURE</span>
+      <span class="sec-title">Put the steps in order</span>
+    </div>
+    <div class="sec-desc">Tap the steps below in the order you built your circuit, then check your order.</div>
+    <div class="seq-bank" id="seq-bank"></div>
+    <div class="seq-order" id="seq-order"></div>
+    <div class="seq-actions">
+      <button class="seq-btn primary" id="seq-check">CHECK ORDER</button>
+      <button class="seq-btn" id="seq-reset">RESET</button>
+    </div>
+    <div class="seq-msg" id="seq-msg"></div>
+  </section>
+
+  <!-- ============ RESULTS REFLECTION ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-badge">RESULTS</span>
+      <span class="sec-title">Recall your results</span>
+    </div>
+    <div class="sec-desc">Fill in what actually happened during your experiment.</div>
+    <div id="fib-container"></div>
+  </section>
+
+  <div class="complete-banner" id="complete-banner">
+    <div class="big">⚡ Circuit complete!</div>
+    <p>You've reviewed open and closed circuits from your own experiment. Great work.</p>
+    <button class="reset-btn" onclick="location.reload()">Restart review</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  // ---------- switch demo ----------
+  let closed = false;
+  const arm = document.getElementById('switch-arm');
+  const wireOn1 = document.getElementById('wire-on-1');
+  const wireOn2 = document.getElementById('wire-on-2');
+  const bulbGlass = document.getElementById('bulb-glass');
+  const bulbFilament = document.getElementById('bulb-filament');
+  const statusPill = document.getElementById('status-pill');
+  const statusDef = document.getElementById('status-def');
+
+  function renderSwitch(){
+    if(closed){
+      arm.setAttribute('x2','332'); arm.setAttribute('y2','78');
+      wireOn1.style.display='block'; wireOn2.style.display='block';
+      bulbGlass.classList.add('lit'); bulbFilament.classList.add('lit');
+      statusPill.textContent='CLOSED CIRCUIT';
+      statusPill.classList.remove('open'); statusPill.classList.add('closed');
+      statusDef.innerHTML = 'The circuit is <b>closed</b> — there is a complete path with no breaks, so current flows all the way around. The bulb lights up.';
+    } else {
+      arm.setAttribute('x2','330'); arm.setAttribute('y2','55');
+      wireOn1.style.display='none'; wireOn2.style.display='none';
+      bulbGlass.classList.remove('lit'); bulbFilament.classList.remove('lit');
+      statusPill.textContent='OPEN CIRCUIT';
+      statusPill.classList.remove('closed'); statusPill.classList.add('open');
+      statusDef.innerHTML = 'The circuit is <b>open</b> — there is a break at the switch, so current cannot flow all the way around. The bulb stays dark.';
+    }
+  }
+  document.getElementById('switch-hitarea').addEventListener('click', ()=>{ closed = !closed; renderSwitch(); });
+  renderSwitch();
+
+  // ---------- progress ----------
+  const state = { flash:new Set(), match:new Set(), tf:new Set(), seq:false, fib:new Set() };
+  function totalTasks(){ return 4 + matchComponents.length + tfItems.length + 1 + fibItems.length; }
+  function doneCount(){ return state.flash.size + state.match.size + state.tf.size + (state.seq?1:0) + state.fib.size; }
+  function updateProgress(){
+    const done = doneCount(), total = totalTasks();
+    document.getElementById('progress-count').textContent = done;
+    document.getElementById('progress-total').textContent = total;
+    document.getElementById('progress-fill').style.width = (done/total*100) + '%';
+    document.getElementById('complete-banner').classList.toggle('show', done >= total);
+  }
+
+  // ---------- flashcards ----------
+  document.querySelectorAll('.flashcard').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      card.classList.toggle('flipped');
+      state.flash.add(card.dataset.flash);
+      updateProgress();
+    });
+  });
+
+  // ---------- matching game ----------
+  const matchComponents = [
+    {name:'Battery (x2)', job:0},
+    {name:'Crocodile Clips', job:1},
+    {name:'Switch', job:2},
+    {name:'Bulb + Holder', job:3}
+  ];
+  const jobs = [
+    'Provides the electrical energy that pushes current around the circuit.',
+    'Connect components together so current has a path to flow between them.',
+    'Opens or closes the circuit to control when current flows.',
+    'Uses electrical energy to produce light — lets us see if the circuit is working.'
+  ];
+  // shuffle job display order but keep index mapping
+  const jobOrder = [3,1,0,2];
+
+  let selectedComponent = null;
+  const chipsWrap = document.getElementById('match-chips');
+  const jobsWrap = document.getElementById('match-jobs');
+
+  matchComponents.forEach((c, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'match-chip';
+    el.textContent = c.name;
+    el.dataset.idx = idx;
+    el.addEventListener('click', ()=>{
+      if(el.classList.contains('matched')) return;
+      document.querySelectorAll('.match-chip').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedComponent = idx;
+    });
+    chipsWrap.appendChild(el);
+  });
+
+  jobOrder.forEach(jobIdx=>{
+    const el = document.createElement('div');
+    el.className = 'job-card';
+    el.textContent = jobs[jobIdx];
+    el.dataset.job = jobIdx;
+    el.addEventListener('click', ()=>{
+      if(el.classList.contains('matched') || selectedComponent === null) return;
+      const correctJob = matchComponents[selectedComponent].job;
+      if(correctJob === jobIdx){
+        el.classList.add('matched');
+        chipsWrap.querySelector(`.match-chip[data-idx="${selectedComponent}"]`).classList.add('matched');
+        state.match.add(selectedComponent);
+        selectedComponent = null;
+        updateProgress();
+      } else {
+        el.classList.add('shake');
+        setTimeout(()=>el.classList.remove('shake'), 350);
+      }
+    });
+    jobsWrap.appendChild(el);
+  });
+
+  // ---------- true / false ----------
+  const tfItems = [
+    {statement:'When the switch is open, the bulb will light up.', answer:false,
+     feedback:'False. An open switch breaks the pathway, so current cannot reach the bulb.'},
+    {statement:'A closed circuit has a complete path with no breaks.', answer:true,
+     feedback:'Correct. Every connection has to be secure for current to flow all the way around.'},
+    {statement:'If one crocodile clip is loose, the circuit can still be a working closed circuit.', answer:false,
+     feedback:'False. A loose clip creates a break in the path, so the circuit is open even if everything else is connected.'},
+    {statement:'A switch lets us control the circuit without disconnecting the wires each time.', answer:true,
+     feedback:'Correct. That is exactly why switches are useful — they open and close the path quickly and safely.'}
+  ];
+  const tfContainer = document.getElementById('tf-container');
+  tfItems.forEach((item, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'tf-item';
+    el.innerHTML = `
+      <div class="tf-statement">${item.statement}</div>
+      <div class="tf-buttons">
+        <button class="tf-btn" data-choice="true">TRUE</button>
+        <button class="tf-btn" data-choice="false">FALSE</button>
+      </div>
+      <div class="tf-feedback"></div>
+    `;
+    tfContainer.appendChild(el);
+    el.querySelectorAll('.tf-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(el.classList.contains('locked')) return;
+        const choice = btn.dataset.choice === 'true';
+        const correct = choice === item.answer;
+        const fb = el.querySelector('.tf-feedback');
+        fb.textContent = (correct?'✓ ':'✗ ') + item.feedback;
+        fb.classList.add('show', correct?'correct':'incorrect');
+        el.classList.add('locked');
+        state.tf.add(idx);
+        updateProgress();
+      });
+    });
+  });
+
+  // ---------- sequencing ----------
+  const correctSteps = [
+    'Connect one crocodile clip from the battery to the switch.',
+    'Connect another crocodile clip from the switch to the bulb holder.',
+    'Connect the last crocodile clip from the bulb holder back to the battery.',
+    'Check that every clip is firmly attached.',
+    'Close the switch and observe the bulb.'
+  ];
+  const shuffled = [...correctSteps].sort(()=>Math.random()-0.5);
+  const seqBank = document.getElementById('seq-bank');
+  const seqOrder = document.getElementById('seq-order');
+  let currentOrder = [];
+
+  function renderBank(){
+    seqBank.innerHTML='';
+    shuffled.forEach(step=>{
+      const chip = document.createElement('div');
+      chip.className = 'seq-chip';
+      chip.textContent = step;
+      if(currentOrder.includes(step)) chip.classList.add('used');
+      chip.addEventListener('click', ()=>{
+        if(currentOrder.includes(step)) return;
+        currentOrder.push(step);
+        renderBank(); renderOrder();
+      });
+      seqBank.appendChild(chip);
+    });
+  }
+  function renderOrder(){
+    seqOrder.innerHTML='';
+    currentOrder.forEach((step, i)=>{
+      const row = document.createElement('div');
+      row.className = 'seq-order-item';
+      row.innerHTML = `<span class="num">${i+1}.</span><span>${step}</span>`;
+      seqOrder.appendChild(row);
+    });
+  }
+  renderBank(); renderOrder();
+
+  document.getElementById('seq-check').addEventListener('click', ()=>{
+    const msg = document.getElementById('seq-msg');
+    if(currentOrder.length < correctSteps.length){
+      msg.textContent = 'Place all the steps first.';
+      msg.className = 'seq-msg incorrect';
+      return;
+    }
+    let allCorrect = true;
+    document.querySelectorAll('.seq-order-item').forEach((row, i)=>{
+      row.classList.remove('correct-pos','wrong-pos');
+      if(currentOrder[i] === correctSteps[i]){
+        row.classList.add('correct-pos');
+      } else {
+        row.classList.add('wrong-pos');
+        allCorrect = false;
+      }
+    });
+    if(allCorrect){
+      msg.textContent = '✓ Perfect order!';
+      msg.className = 'seq-msg correct';
+      state.seq = true;
+      updateProgress();
+    } else {
+      msg.textContent = '✗ Some steps are out of order — check the highlighted ones and try rearranging.';
+      msg.className = 'seq-msg incorrect';
+    }
+  });
+  document.getElementById('seq-reset').addEventListener('click', ()=>{
+    currentOrder = [];
+    document.getElementById('seq-msg').textContent='';
+    renderBank(); renderOrder();
+  });
+
+  // ---------- fill in the blank results ----------
+  const fibItems = [
+    {
+      sentence:'When the switch was <b>closed</b>, the circuit was a ______ circuit and the bulb ______.',
+      blanks:[
+        {placeholder:'complete / closed', answers:['closed','complete']},
+        {placeholder:'lit up / did light', answers:['lit up','lit','lights up','turned on','light up','on']}
+      ]
+    },
+    {
+      sentence:'When the switch was <b>open</b>, the circuit was an ______ circuit and the bulb ______.',
+      blanks:[
+        {placeholder:'open / broken', answers:['open','broken']},
+        {placeholder:'stayed off / did not light', answers:['stayed off','did not light','off','stayed dark','dark','did not light up']}
+      ]
+    }
+  ];
+  const fibContainer = document.getElementById('fib-container');
+  fibItems.forEach((item, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'fib-item';
+    const blanksHtml = item.blanks.map((b,i)=>`
+      <div class="fib-field">
+        <input type="text" class="fib-input" data-blank="${i}" placeholder="${b.placeholder}">
+      </div>`).join('');
+    el.innerHTML = `
+      <div class="fib-sentence">${item.sentence}</div>
+      <div class="fib-blanks">${blanksHtml}</div>
+      <button class="fib-check">CHECK</button>
+      <div class="fib-msg"></div>
+    `;
+    fibContainer.appendChild(el);
+
+    const inputs = el.querySelectorAll('.fib-input');
+    const msg = el.querySelector('.fib-msg');
+    el.querySelector('.fib-check').addEventListener('click', ()=>{
+      let allCorrect = true;
+      let anyEmpty = false;
+      inputs.forEach((inp,i)=>{
+        const val = inp.value.trim().toLowerCase();
+        if(val.length===0) anyEmpty = true;
+        if(!item.blanks[i].answers.includes(val)) allCorrect = false;
+      });
+      if(anyEmpty){
+        msg.textContent = 'Fill in both blanks first.';
+        msg.className = 'fib-msg incorrect';
+      } else if(allCorrect){
+        msg.textContent = '✓ Correct!';
+        msg.className = 'fib-msg correct';
+        state.fib.add(idx);
+        updateProgress();
+      } else {
+        msg.textContent = '✗ Not quite — think about what you saw happen with your own bulb.';
+        msg.className = 'fib-msg incorrect';
+      }
+    });
+  });
+
+  updateProgress();
+})();
+</script>
+
+</body>
+</html>
